@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "AvatarTest.app"
-               BlueprintName = "AvatarTest"
-               ReferencedContainer = "container:AvatarTest.xcodeproj">
+               BuildableName = "ZooTracker.app"
+               BlueprintName = "ZooTracker"
+               ReferencedContainer = "container:ZooTracker.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "AvatarTestTests.xctest"
-               BlueprintName = "AvatarTestTests"
-               ReferencedContainer = "container:AvatarTest.xcodeproj">
+               BuildableName = "ZooTrackerTests.xctest"
+               BlueprintName = "ZooTrackerTests"
+               ReferencedContainer = "container:ZooTracker.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "AvatarTest.app"
-            BlueprintName = "AvatarTest"
-            ReferencedContainer = "container:AvatarTest.xcodeproj">
+            BuildableName = "ZooTracker.app"
+            BlueprintName = "ZooTracker"
+            ReferencedContainer = "container:ZooTracker.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "AvatarTest.app"
-            BlueprintName = "AvatarTest"
-            ReferencedContainer = "container:AvatarTest.xcodeproj">
+            BuildableName = "ZooTracker.app"
+            BlueprintName = "ZooTracker"
+            ReferencedContainer = "container:ZooTracker.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
