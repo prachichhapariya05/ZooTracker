@@ -11,15 +11,44 @@ const Stack = createStackNavigator();
 function Navigation() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Splash">
+      <Stack.Navigator
+        initialRouteName="Splash"
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: '#1E5631',
+          },
+          headerTintColor: '#f5f5dc',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+            fontSize: 24,
+          },
+        }}>
         <Stack.Screen
           name="Splash"
           component={SplashScreenComponent}
           options={{headerShown: false}}
         />
-        <Stack.Screen name="AnimalList" component={AnimalListScreen} />
-        <Stack.Screen name="AddAnimal" component={AddAnimalScreen} />
-        <Stack.Screen name="EditAnimal" component={EditAnimalScreen} />
+        <Stack.Screen
+          name="AnimalList"
+          component={AnimalListScreen}
+          options={{
+            title: 'Animal List',
+          }}
+        />
+        <Stack.Screen
+          name="AddAnimal"
+          component={AddAnimalScreen}
+          options={{
+            title: 'Add Animal',
+          }}
+        />
+        <Stack.Screen
+          name="EditAnimal"
+          component={EditAnimalScreen}
+          options={{
+            title: 'Edit Animal',
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

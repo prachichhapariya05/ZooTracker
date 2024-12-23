@@ -32,6 +32,12 @@ const EditAnimalScreen = ({route, navigation}) => {
   const [breed, setBreed] = useState(animal?.breed || '');
   const [description, setDescription] = useState(animal?.description || '');
   const [image, setImage] = useState(animal?.photo || '');
+  const [errors, setErrors] = useState({
+    name: '',
+    breed: '',
+    description: '',
+    image: '',
+  });
   const [loading, setLoading] = useState(false);
 
   const handleImagePick = async () => {
@@ -53,8 +59,32 @@ const EditAnimalScreen = ({route, navigation}) => {
   };
 
   const handleSave = () => {
-    dispatch(editAnimal(animalId, {name, breed, description, photo: image}));
-    navigation.goBack();
+    let valid = true;
+    const newErrors = {name: '', breed: '', description: '', image: ''};
+
+    if (!name) {
+      newErrors.name = 'Name is required';
+      valid = false;
+    }
+    if (!breed) {
+      newErrors.breed = 'Breed is required';
+      valid = false;
+    }
+    if (!description) {
+      newErrors.description = 'Description is required';
+      valid = false;
+    }
+    if (!image) {
+      newErrors.image = 'Image is required';
+      valid = false;
+    }
+
+    setErrors(newErrors);
+
+    if (valid) {
+      dispatch(editAnimal(animalId, {name, breed, description, photo: image}));
+      navigation.goBack();
+    }
   };
 
   return (
@@ -63,29 +93,44 @@ const EditAnimalScreen = ({route, navigation}) => {
         <Text style={styles.header}>Edit Animal</Text>
 
         <Text style={styles.label}>Name</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter animal name"
-          value={name}
-          onChangeText={setName}
-        />
+        <View style={styles.inputBottom}>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter animal name"
+            value={name}
+            onChangeText={setName}
+          />
+          {errors.name ? (
+            <Text style={styles.errorText}>{errors.name}</Text>
+          ) : null}
+        </View>
 
         <Text style={styles.label}>Breed</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter animal breed"
-          value={breed}
-          onChangeText={setBreed}
-        />
+        <View style={styles.inputBottom}>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter animal breed"
+            value={breed}
+            onChangeText={setBreed}
+          />
+          {errors.breed ? (
+            <Text style={styles.errorText}>{errors.breed}</Text>
+          ) : null}
+        </View>
 
         <Text style={styles.label}>Description</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="Enter description"
-          value={description}
-          onChangeText={setDescription}
-          multiline
-        />
+        <View style={styles.inputBottom}>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="Enter description"
+            value={description}
+            onChangeText={setDescription}
+            multiline
+          />
+          {errors.description ? (
+            <Text style={styles.errorText}>{errors.description}</Text>
+          ) : null}
+        </View>
 
         <Text style={styles.label}>Image</Text>
         {image ? (
@@ -93,16 +138,22 @@ const EditAnimalScreen = ({route, navigation}) => {
         ) : (
           <Text style={styles.placeholderText}>No image selected</Text>
         )}
-
-        <TouchableOpacity style={styles.uploadButton} onPress={handleImagePick}>
-          {loading ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.uploadButtonText}>
-              {image ? 'Change Photo' : 'Upload Photo'}
-            </Text>
-          )}
-        </TouchableOpacity>
+        <View style={styles.inputBottom}>
+          <TouchableOpacity
+            style={styles.uploadButton}
+            onPress={handleImagePick}>
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.uploadButtonText}>
+                {image ? 'Change Photo' : 'Upload Photo'}
+              </Text>
+            )}
+          </TouchableOpacity>
+          {errors.image ? (
+            <Text style={styles.errorText}>{errors.image}</Text>
+          ) : null}
+        </View>
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           <Text style={styles.saveButtonText}>Save</Text>
@@ -147,10 +198,10 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 4,
     padding: 12,
-    marginBottom: 16,
     fontSize: 16,
     backgroundColor: '#f5f5f5',
   },
+  inputBottom: {marginBottom: 16},
   textArea: {
     height: 100,
     textAlignVertical: 'top',
@@ -190,12 +241,16 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 16,
   },
   uploadButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 14,
+    marginBottom: 8,
   },
 });
 

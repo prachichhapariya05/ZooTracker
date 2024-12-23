@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import {useDispatch} from 'react-redux';
 import {launchImageLibrary} from 'react-native-image-picker';
@@ -16,64 +17,141 @@ function AddAnimalScreen({navigation}) {
   const [breed, setBreed] = useState('');
   const [description, setDescription] = useState('');
   const [photo, setPhoto] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({
+    name: '',
+    breed: '',
+    description: '',
+    photo: '',
+  });
+
   const dispatch = useDispatch();
 
   const handleAdd = () => {
-    const newAnimal = {
-      id: Math.random().toString(),
-      name,
-      breed,
-      description,
-      photo,
-    };
-    dispatch(addAnimal(newAnimal));
-    navigation.goBack();
+    let valid = true;
+    const newErrors = {name: '', breed: '', description: '', photo: ''};
+
+    // Validate fields
+    if (!name) {
+      newErrors.name = 'Name is required';
+      valid = false;
+    }
+    if (!breed) {
+      newErrors.breed = 'Breed is required';
+      valid = false;
+    }
+    if (!description) {
+      newErrors.description = 'Description is required';
+      valid = false;
+    }
+
+    if (photo === null) {
+      newErrors.photo = 'Animal Image is required';
+      valid = false;
+    }
+
+    setErrors(newErrors);
+
+    if (valid) {
+      const newAnimal = {
+        id: Math.random().toString(),
+        name,
+        breed,
+        description,
+        photo,
+      };
+      dispatch(addAnimal(newAnimal));
+      navigation.goBack();
+    }
   };
 
   const handleImagePick = async () => {
-    const result = await launchImageLibrary({
-      mediaType: 'photo',
-      quality: 0.8,
-    });
+    try {
+      setLoading(true);
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        quality: 0.8,
+      });
 
-    if (result.assets && result.assets.length > 0) {
-      setPhoto(result.assets[0].uri);
+      if (result.assets && result.assets.length > 0) {
+        setPhoto(result.assets[0].uri);
+      } else {
+        setPhoto(null); // Reset photo if no image is selected
+      }
+    } catch (error) {
+      console.error('Error selecting image:', error);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleInputChange = (field, value) => {
+    // Clear the error message when the user starts typing
+    setErrors(prev => ({...prev, [field]: ''}));
+    if (field === 'name') setName(value);
+    if (field === 'breed') setBreed(value);
+    if (field === 'description') setDescription(value);
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.card}>
         <Text style={styles.header}>Add New Animal</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Name"
-          value={name}
-          onChangeText={setName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Breed"
-          value={breed}
-          onChangeText={setBreed}
-        />
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="Description"
-          value={description}
-          onChangeText={setDescription}
-          multiline
-        />
-
-        <TouchableOpacity style={styles.uploadButton} onPress={handleImagePick}>
-          <Text style={styles.uploadButtonText}>
-            {photo ? 'Change Photo' : 'Upload Photo'}
-          </Text>
-        </TouchableOpacity>
-
+        <View style={styles.inputBottom}>
+          <TextInput
+            style={[styles.input, errors.name ? styles.inputError : null]}
+            placeholder="Name"
+            value={name}
+            onChangeText={text => handleInputChange('name', text)}
+          />
+          {errors.name ? (
+            <Text style={styles.errorText}>{errors.name}</Text>
+          ) : null}
+        </View>
+        <View style={styles.inputBottom}>
+          <TextInput
+            style={[styles.input, errors.breed ? styles.inputError : null]}
+            placeholder="Breed"
+            value={breed}
+            onChangeText={text => handleInputChange('breed', text)}
+          />
+          {errors.breed ? (
+            <Text style={styles.errorText}>{errors.breed}</Text>
+          ) : null}
+        </View>
+        <View style={styles.inputBottom}>
+          <TextInput
+            style={[
+              styles.input,
+              styles.textArea,
+              errors.description ? styles.inputError : null,
+            ]}
+            placeholder="Description"
+            value={description}
+            onChangeText={text => handleInputChange('description', text)}
+            multiline
+          />
+          {errors.description ? (
+            <Text style={styles.errorText}>{errors.description}</Text>
+          ) : null}
+        </View>
+        <View style={styles.inputBottom}>
+          <TouchableOpacity
+            style={styles.uploadButton}
+            onPress={handleImagePick}>
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.uploadButtonText}>
+                {photo ? 'Change Photo' : 'Upload Photo'}
+              </Text>
+            )}
+          </TouchableOpacity>
+          {errors.photo ? (
+            <Text style={styles.errorText}>{errors.photo}</Text>
+          ) : null}
+        </View>
         {photo && <Image source={{uri: photo}} style={styles.imagePreview} />}
-
         <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
           <Text style={styles.addButtonText}>Add Animal</Text>
         </TouchableOpacity>
@@ -111,9 +189,14 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 4,
     padding: 12,
-    marginBottom: 16,
     fontSize: 16,
     backgroundColor: '#f5f5f5',
+  },
+  inputBottom: {
+    marginBottom: 16,
+  },
+  inputError: {
+    borderColor: 'red',
   },
   textArea: {
     height: 100,
@@ -124,7 +207,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 16,
   },
   uploadButtonText: {
     color: '#fff',
@@ -148,6 +230,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 14,
+    marginBottom: 8,
   },
 });
 

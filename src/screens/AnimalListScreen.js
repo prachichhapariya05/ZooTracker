@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  TextInput,
 } from 'react-native';
 import {useSelector, useDispatch} from 'react-redux';
 import {removeAnimal} from '../store/actions/animalActions';
@@ -13,6 +14,14 @@ import {removeAnimal} from '../store/actions/animalActions';
 function AnimalListScreen({navigation}) {
   const animals = useSelector(state => state.animal.animals);
   const dispatch = useDispatch();
+
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredAnimals = animals.filter(
+    animal =>
+      animal.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      animal.breed.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   const handleRemove = id => {
     dispatch(removeAnimal(id));
@@ -51,14 +60,22 @@ function AnimalListScreen({navigation}) {
 
   return (
     <View style={styles.container}>
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search by name or breed"
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
+
       <FlatList
-        data={animals}
+        data={filteredAnimals}
         keyExtractor={item => item.id.toString()}
         renderItem={renderAnimalCard}
         ListEmptyComponent={
           <Text style={styles.emptyText}>No animals found. Add some!</Text>
         }
       />
+
       <TouchableOpacity
         style={styles.addButton}
         onPress={() => navigation.navigate('AddAnimal')}>
@@ -73,6 +90,15 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: '#f9f9f9',
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 20,
+    padding: 12,
+    marginBottom: 16,
+    fontSize: 16,
+    backgroundColor: '#f5f5f5',
   },
   card: {
     backgroundColor: '#fff',
@@ -133,7 +159,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   addButton: {
-    backgroundColor: '#2196f3',
+    backgroundColor: '#1E5631',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -147,6 +173,7 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: 'center',
     fontSize: 18,
+    fontWeight: '600',
     color: '#888',
     marginTop: 32,
   },
