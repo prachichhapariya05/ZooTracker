@@ -7,31 +7,33 @@ import {
   Image,
   StyleSheet,
   ActivityIndicator,
+  ScrollView,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import {useDispatch} from 'react-redux';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {addAnimal} from '../store/actions/animalActions';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 function AddAnimalScreen({navigation}) {
   const [name, setName] = useState('');
   const [breed, setBreed] = useState('');
   const [description, setDescription] = useState('');
-  const [photo, setPhoto] = useState(null);
+  const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({
     name: '',
     breed: '',
     description: '',
-    photo: '',
+    photos: '',
   });
 
   const dispatch = useDispatch();
 
   const handleAdd = () => {
     let valid = true;
-    const newErrors = {name: '', breed: '', description: '', photo: ''};
+    const newErrors = {name: '', breed: '', description: '', photos: ''};
 
-    // Validate fields
     if (!name) {
       newErrors.name = 'Name is required';
       valid = false;
@@ -45,8 +47,8 @@ function AddAnimalScreen({navigation}) {
       valid = false;
     }
 
-    if (photo === null) {
-      newErrors.photo = 'Animal Image is required';
+    if (photos.length === 0) {
+      newErrors.photos = 'At least one image is required';
       valid = false;
     }
 
@@ -58,7 +60,7 @@ function AddAnimalScreen({navigation}) {
         name,
         breed,
         description,
-        photo,
+        photos,
       };
       dispatch(addAnimal(newAnimal));
       navigation.goBack();
@@ -70,13 +72,12 @@ function AddAnimalScreen({navigation}) {
       setLoading(true);
       const result = await launchImageLibrary({
         mediaType: 'photo',
+        selectionLimit: 0,
         quality: 0.8,
       });
 
       if (result.assets && result.assets.length > 0) {
-        setPhoto(result.assets[0].uri);
-      } else {
-        setPhoto(null); // Reset photo if no image is selected
+        setPhotos([...photos, ...result.assets.map(asset => asset.uri)]);
       }
     } catch (error) {
       console.error('Error selecting image:', error);
@@ -86,11 +87,15 @@ function AddAnimalScreen({navigation}) {
   };
 
   const handleInputChange = (field, value) => {
-    // Clear the error message when the user starts typing
     setErrors(prev => ({...prev, [field]: ''}));
     if (field === 'name') setName(value);
     if (field === 'breed') setBreed(value);
     if (field === 'description') setDescription(value);
+  };
+
+  const removeImage = index => {
+    const updatedPhotos = photos.filter((_, i) => i !== index);
+    setPhotos(updatedPhotos);
   };
 
   return (
@@ -143,15 +148,27 @@ function AddAnimalScreen({navigation}) {
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <Text style={styles.uploadButtonText}>
-                {photo ? 'Change Photo' : 'Upload Photo'}
+                {photos ? 'Add Photo' : 'Upload Photo'}
               </Text>
             )}
           </TouchableOpacity>
-          {errors.photo ? (
-            <Text style={styles.errorText}>{errors.photo}</Text>
+          {errors.photos ? (
+            <Text style={styles.errorText}>{errors.photos}</Text>
           ) : null}
         </View>
-        {photo && <Image source={{uri: photo}} style={styles.imagePreview} />}
+        <ScrollView horizontal>
+          {photos.map((uri, index) => (
+            <View key={index} style={styles.imageWrapper}>
+              <Image source={{uri}} style={styles.imagePreview} />
+              <TouchableWithoutFeedback onPress={() => removeImage(index)}>
+                <View style={styles.removeIcon}>
+                  <Icon name="cancel" size={24} color="white" />
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          ))}
+        </ScrollView>
+
         <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
           <Text style={styles.addButtonText}>Add Animal</Text>
         </TouchableOpacity>
@@ -183,6 +200,25 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
     color: '#333',
+  },
+  imageWrapper: {
+    position: 'relative',
+    marginRight: 10,
+    marginTop: 10,
+  },
+  imagePreview: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    marginBottom: 16,
+    resizeMode: 'cover',
+  },
+  removeIcon: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    backgroundColor: 'red',
+    borderRadius: 12,
   },
   input: {
     borderWidth: 1,
@@ -235,6 +271,13 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 14,
     marginBottom: 8,
+  },
+  imagePreview: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    margin: 4,
+    resizeMode: 'cover',
   },
 });
 

@@ -13,6 +13,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {editAnimal} from '../store/actions/animalActions';
 import {selectAnimalById} from '../store/selectors';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const EditAnimalScreen = ({route, navigation}) => {
   const {animalId} = route.params;
@@ -31,12 +32,12 @@ const EditAnimalScreen = ({route, navigation}) => {
   const [name, setName] = useState(animal?.name || '');
   const [breed, setBreed] = useState(animal?.breed || '');
   const [description, setDescription] = useState(animal?.description || '');
-  const [image, setImage] = useState(animal?.photo || '');
+  const [images, setImages] = useState(animal?.photos || []);
   const [errors, setErrors] = useState({
     name: '',
     breed: '',
     description: '',
-    image: '',
+    images: '',
   });
   const [loading, setLoading] = useState(false);
 
@@ -46,21 +47,29 @@ const EditAnimalScreen = ({route, navigation}) => {
       const result = await launchImageLibrary({
         mediaType: 'photo',
         quality: 0.8,
+        selectionLimit: 0,
       });
 
       if (result.assets && result.assets.length > 0) {
-        setImage(result.assets[0].uri);
+        setImages(prevImages => [
+          ...prevImages,
+          ...result.assets.map(item => item.uri),
+        ]);
       }
     } catch (error) {
-      console.error('Error selecting image:', error);
+      console.error('Error selecting images:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleImageRemove = uri => {
+    setImages(prevImages => prevImages.filter(image => image !== uri));
+  };
+
   const handleSave = () => {
     let valid = true;
-    const newErrors = {name: '', breed: '', description: '', image: ''};
+    const newErrors = {name: '', breed: '', description: '', images: ''};
 
     if (!name) {
       newErrors.name = 'Name is required';
@@ -74,15 +83,17 @@ const EditAnimalScreen = ({route, navigation}) => {
       newErrors.description = 'Description is required';
       valid = false;
     }
-    if (!image) {
-      newErrors.image = 'Image is required';
+    if (images.length === 0) {
+      newErrors.images = 'At least one image is required';
       valid = false;
     }
 
     setErrors(newErrors);
 
     if (valid) {
-      dispatch(editAnimal(animalId, {name, breed, description, photo: image}));
+      dispatch(
+        editAnimal(animalId, {name, breed, description, photos: images}),
+      );
       navigation.goBack();
     }
   };
@@ -132,12 +143,24 @@ const EditAnimalScreen = ({route, navigation}) => {
           ) : null}
         </View>
 
-        <Text style={styles.label}>Image</Text>
-        {image ? (
-          <Image source={{uri: image}} style={styles.animalImage} />
-        ) : (
-          <Text style={styles.placeholderText}>No image selected</Text>
-        )}
+        <Text style={styles.label}>Images</Text>
+        <ScrollView horizontal style={styles.imageScroll}>
+          {images.length > 0 ? (
+            images.map((uri, index) => (
+              <View key={index} style={styles.imageContainer}>
+                <Image source={{uri}} style={styles.animalImage} />
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => handleImageRemove(uri)}>
+                  <Icon name="close-circle" size={24} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.placeholderText}>No images selected</Text>
+          )}
+        </ScrollView>
+
         <View style={styles.inputBottom}>
           <TouchableOpacity
             style={styles.uploadButton}
@@ -146,12 +169,12 @@ const EditAnimalScreen = ({route, navigation}) => {
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <Text style={styles.uploadButtonText}>
-                {image ? 'Change Photo' : 'Upload Photo'}
+                {images.length > 0 ? 'Add More Photos' : 'Upload Photos'}
               </Text>
             )}
           </TouchableOpacity>
-          {errors.image ? (
-            <Text style={styles.errorText}>{errors.image}</Text>
+          {errors.images ? (
+            <Text style={styles.errorText}>{errors.images}</Text>
           ) : null}
         </View>
 
@@ -206,12 +229,27 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: 'top',
   },
+  imageScroll: {
+    flexDirection: 'row',
+    marginVertical: 8,
+  },
+  imageContainer: {
+    marginRight: 8,
+    position: 'relative',
+    marginTop: 10,
+  },
   animalImage: {
-    width: '100%',
-    height: 200,
+    width: 100,
+    height: 100,
     borderRadius: 8,
-    marginBottom: 16,
     resizeMode: 'cover',
+  },
+  removeButton: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    backgroundColor: '#f44336',
+    borderRadius: 12,
   },
   placeholderText: {
     fontSize: 14,
